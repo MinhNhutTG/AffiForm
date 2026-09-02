@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tạo ảnh sản phẩm cho TikTok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0d0d;
+    --panel:#161616;
+    --panel-2:#1f1f1f;
+    --accent:#fe2c55;
+    --accent-dim:#d81f42;
+    --accent-2:#25f4ee;
+    --text:#f5f5f5;
+    --text-dim:#999999;
+    --border:#2a2a2a;
+    --sans:'IBM Plex Sans', sans-serif;
+    --serif:'Fraunces', serif;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--accent); color:#15130f; }
+  a{color:var(--accent);}
+
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+
+  header{
+    margin-bottom:40px;
+    max-width:640px;
+  }
+  header h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(28px, 4vw, 40px);
+    line-height:1.2;
+    margin:0 0 12px;
+    color:var(--text);
+    text-shadow: 2px 0 0 var(--accent-2), -2px 0 0 var(--accent);
+  }
+  header p{
+    color:var(--text-dim);
+    font-size:16px;
+    margin:0;
+    max-width:56ch;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:20px;
+  }
+  @media(min-width:860px){
+    .grid{ grid-template-columns: 1fr 1fr; align-items:start; }
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:28px;
+  }
+
+  .step{ margin-bottom:32px; }
+  .step:last-child{ margin-bottom:0; }
+  .step-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .step-num{
+    width:24px; height:24px;
+    flex:none;
+    border-radius:50%;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    font-family:var(--mono);
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .step-title h2{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:17px;
+    margin:0;
+    color:var(--text);
+  }
+  .step + .step{
+    padding-top:28px;
+    border-top:1px solid var(--border);
+  }
+
+  .field{ margin-bottom:22px; }
+  .field:last-child{ margin-bottom:0; }
+  .field label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:14px;
+    font-weight:500;
+    color:var(--text);
+    margin-bottom:7px;
+  }
+  .field label .req{ color:var(--accent); font-size:12px; font-weight:400; }
+  .field input, .field textarea{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:3px;
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:15px;
+    padding:11px 12px;
+    transition:border-color .15s ease;
+  }
+  .field textarea{ resize:vertical; min-height:60px; font-family:var(--sans); }
+  .field input::placeholder, .field textarea::placeholder{ color:#5c564a; }
+  .field input:focus, .field textarea:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  .field input:focus-visible, .field textarea:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  .field input.error, .field textarea.error{
+    border-color:var(--accent);
+  }
+  .field-error{
+    font-size:13px;
+    color:var(--accent);
+    margin-top:7px;
+    display:none;
+  }
+  .field-error.visible{ display:block; }
+  .field .hint{
+    font-size:13px;
+    color:var(--text-dim);
+    margin-top:7px;
+    line-height:1.5;
+  }
+
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-top:9px;
+  }
+  .chip{
+    font-family:var(--sans);
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-dim);
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .chip:hover{ border-color:var(--accent-2); color:var(--text); }
+  .chip:focus-visible{ outline:2px solid var(--accent-2); outline-offset:1px; }
+  .chip.active{ border-color:var(--accent-2); color:var(--accent-2); background:rgba(37,244,238,0.08); }
+  .chip.active::after{ content:" ✕"; opacity:0.75; }
+
+  .output-panel{
+    position:sticky;
+    top:24px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    overflow:hidden;
+    opacity:0;
+    transform:translateY(8px);
+    animation:reveal .5s ease forwards .1s;
+  }
+  @keyframes reveal{ to{ opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){
+    .output-panel{ animation:none; opacity:1; transform:none; }
+  }
+
+  .output-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    background:var(--panel-2);
+  }
+  .output-head span{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .sprockets{
+    display:flex;
+    gap:5px;
+  }
+  .sprockets i{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--border);
+    display:block;
+  }
+
+  .output-note{
+    padding:12px 16px 0;
+    font-size:13px;
+    color:var(--text-dim);
+  }
+
+  .output-body{
+    display:flex;
+  }
+  .film-rail{
+    width:18px;
+    flex:none;
+    background-image: radial-gradient(circle at 9px 12px, var(--bg) 3px, transparent 3.5px);
+    background-size: 18px 22px;
+    border-right:1px solid var(--border);
+  }
+  .film-rail.right{ border-right:none; border-left:1px solid var(--border); }
+
+  pre.json-out{
+    margin:0;
+    padding:18px 16px;
+    font-family:var(--mono);
+    font-size:13px;
+    line-height:1.65;
+    white-space:pre-wrap;
+    word-break:break-word;
+    flex:1;
+    min-height:220px;
+    color:var(--text);
+  }
+  pre.json-out .jkey{ color:var(--accent); }
+  pre.json-out .jstr{ color:var(--accent-2); }
+  pre.json-out .jpunc{ color:var(--text-dim); }
+  pre.json-out .empty{ color:var(--text-dim); font-style:italic; }
+
+  .actions{
+    display:flex;
+    gap:8px;
+    padding:14px 16px;
+    border-top:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  button{
+    font-family:var(--sans);
+    font-size:14px;
+    font-weight:500;
+    padding:10px 14px;
+    border-radius:3px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text);
+    cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  button:hover{ border-color:var(--text-dim); }
+  button:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  button.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#15130f;
+  }
+  button.primary:hover{ background:var(--accent-dim); border-color:var(--accent-dim); }
+  button.primary.copied{ background:var(--accent-2); border-color:var(--accent-2); color:#0d0d0d; }
+
+  .templates-panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:28px;
+    margin-top:20px;
+  }
+  .template-save-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .template-save-row input{
+    flex:1;
+    min-width:200px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:3px;
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:14px;
+    padding:10px 12px;
+  }
+  .template-save-row input:focus{ outline:none; border-color:var(--accent); }
+  .template-list{ display:flex; flex-direction:column; gap:8px; }
+  .template-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:11px 14px;
+    border:1px solid var(--border);
+    border-radius:3px;
+    background:var(--panel-2);
+    flex-wrap:wrap;
+  }
+  .template-item span{ font-size:14px; color:var(--text); }
+  .template-item .template-actions{ display:flex; gap:6px; flex:none; }
+  .template-item button{ padding:6px 11px; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Tạo ảnh sản phẩm cho TikTok</h1>
+    <p>Trả lời các câu hỏi bên dưới. Trang sẽ tự ghép lại thành một đoạn mã, bạn chỉ cần dán đoạn mã đó vào nơi tạo ảnh bằng máy tính (AI).</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="step">
+        <div class="step-title"><span class="step-num">1</span><h2>Sản phẩm của bạn</h2></div>
+        <div class="field">
+          <label for="subject">Sản phẩm là gì? <span class="req">bắt buộc</span></label>
+          <input id="subject" data-key="product" type="text" placeholder="Ví dụ: chai serum dưỡng da, hộp thuỷ tinh nhỏ">
+          <p class="field-error" id="subjectError">Bạn cần điền sản phẩm là gì trước khi sao chép hoặc tải về.</p>
+        </div>
+        <div class="field">
+          <label for="category">Sản phẩm thuộc nhóm nào?</label>
+          <input id="category" data-key="category" type="text" placeholder="Ví dụ: mỹ phẩm &amp; làm đẹp">
+          <div class="chips" data-target="category">
+            <button type="button" class="chip">mỹ phẩm &amp; làm đẹp</button>
+            <button type="button" class="chip">quần áo, thời trang</button>
+            <button type="button" class="chip">đồ dùng trong nhà</button>
+            <button type="button" class="chip">đồ ăn &amp; thức uống</button>
+            <button type="button" class="chip">đồ điện tử</button>
+            <button type="button" class="chip">đồ cho mẹ &amp; bé</button>
+            <button type="button" class="chip">thực phẩm chức năng</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">2</span><h2>Ảnh chụp ở đâu, trông ra sao</h2></div>
+        <div class="field">
+          <label for="scene">Ảnh chụp ở đâu?</label>
+          <input id="scene" data-key="scene" type="text" placeholder="Ví dụ: trên bàn gỗ, gần cửa sổ">
+          <div class="chips" data-target="scene">
+            <button type="button" class="chip">trên bàn gỗ</button>
+            <button type="button" class="chip">trong phòng tắm đẹp</button>
+            <button type="button" class="chip">ngoài trời, có nắng</button>
+            <button type="button" class="chip">trên bàn làm việc gọn gàng</button>
+            <button type="button" class="chip">trong bếp, ấm cúng</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="style">Ảnh trông giống kiểu nào?</label>
+          <input id="style" data-key="style" type="text" placeholder="Ví dụ: giống ảnh tự chụp đời thường">
+          <div class="chips" data-target="style">
+            <button type="button" class="chip">giống ảnh tự chụp đời thường</button>
+            <button type="button" class="chip">nền trắng đơn giản, gọn gàng</button>
+            <button type="button" class="chip">chụp từ trên xuống, đồ xếp gọn</button>
+            <button type="button" class="chip">trông sang trọng, đắt tiền</button>
+            <button type="button" class="chip">chụp gần lúc mở hộp sản phẩm</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="mood">Ảnh cho cảm giác gì?</label>
+          <input id="mood" data-key="mood" type="text" placeholder="Ví dụ: tươi mới, sạch sẽ">
+          <div class="chips" data-target="mood">
+            <button type="button" class="chip">tươi mới, sạch sẽ</button>
+            <button type="button" class="chip">sang trọng, đắt tiền</button>
+            <button type="button" class="chip">gần gũi, ấm áp</button>
+            <button type="button" class="chip">vui vẻ, trẻ trung</button>
+            <button type="button" class="chip">đáng tin cậy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">3</span><h2>Ánh sáng, góc chụp &amp; có người không</h2></div>
+        <div class="field">
+          <label for="lighting">Ánh sáng ra sao?</label>
+          <input id="lighting" data-key="lighting" type="text" placeholder="Ví dụ: ánh sáng ban ngày, tự nhiên">
+          <div class="chips" data-target="lighting">
+            <button type="button" class="chip">ánh sáng ban ngày, tự nhiên</button>
+            <button type="button" class="chip">ánh sáng dịu, nhẹ nhàng</button>
+            <button type="button" class="chip">ánh nắng buổi sáng</button>
+            <button type="button" class="chip">đèn tròn, sáng đều</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="camera_angle">Chụp từ góc nào?</label>
+          <input id="camera_angle" data-key="camera_angle" type="text" placeholder="Ví dụ: chụp gần, thấy rõ sản phẩm">
+          <div class="chips" data-target="camera_angle">
+            <button type="button" class="chip">chụp gần, thấy rõ sản phẩm</button>
+            <button type="button" class="chip">chụp từ trên xuống</button>
+            <button type="button" class="chip">chụp ngang, giống mắt nhìn</button>
+            <button type="button" class="chip">giống như đang cầm điện thoại quay</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="model">Trong ảnh có người không?</label>
+          <input id="model" data-key="model_interaction" type="text" placeholder="Ví dụ: có tay đang cầm sản phẩm">
+          <div class="chips" data-target="model">
+            <button type="button" class="chip">có tay đang cầm sản phẩm</button>
+            <button type="button" class="chip">không có người, chỉ có sản phẩm</button>
+            <button type="button" class="chip">có người đang dùng thử</button>
+            <button type="button" class="chip">có người, thấy rõ cả người</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">4</span><h2>Kích thước &amp; màu ảnh</h2></div>
+        <div class="field">
+          <label for="aspect_ratio">Ảnh hình dọc hay ngang?</label>
+          <input id="aspect_ratio" data-key="aspect_ratio" type="text" value="hình dọc (cho TikTok)">
+          <div class="chips" data-target="aspect_ratio" data-mode="single">
+            <button type="button" class="chip">hình dọc (cho TikTok)</button>
+            <button type="button" class="chip">hình vuông</button>
+            <button type="button" class="chip">hình ngang</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="palette">Màu chính trong ảnh?</label>
+          <input id="palette" data-key="color_palette" type="text" placeholder="Ví dụ: màu pastel, nhẹ nhàng">
+          <div class="chips" data-target="palette">
+            <button type="button" class="chip">màu pastel, nhẹ nhàng</button>
+            <button type="button" class="chip">chỉ màu đen và trắng</button>
+            <button type="button" class="chip">màu hồng và trắng</button>
+            <button type="button" class="chip">màu nâu đất, ấm áp</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="details">Còn điều gì khác muốn thêm không?</label>
+          <textarea id="details" data-key="details" placeholder="Viết thêm bất cứ điều gì bạn muốn có trong ảnh"></textarea>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">5</span><h2>Chữ, ưu đãi &amp; sticker (thêm sau khi có ảnh)</h2></div>
+        <p class="hint" style="margin:-8px 0 18px;">Máy tính thường viết chữ trong ảnh bị sai, nên 4 ô này chỉ để bạn ghi nhớ, rồi tự thêm bằng CapCut/Canva sau khi có ảnh nền.</p>
+        <div class="field">
+          <label for="text_hook">Tên sản phẩm hiện trên ảnh</label>
+          <input id="text_hook" data-key="text_hook" type="text" placeholder="Ví dụ: chữ viết tay, màu trắng, đặt góc trên, có viền cho nổi">
+        </div>
+        <div class="field">
+          <label for="benefit_text">Câu công dụng ngắn</label>
+          <input id="benefit_text" data-key="benefit_text" type="text" placeholder="Ví dụ: Hết mụn sau 7 ngày">
+        </div>
+        <div class="field">
+          <label for="badge">Nhãn ưu đãi</label>
+          <input id="badge" data-key="badge" type="text" placeholder="Ví dụ: Giảm 20%">
+          <div class="chips" data-target="badge">
+            <button type="button" class="chip">Giảm 20%</button>
+            <button type="button" class="chip">Hot Sale</button>
+            <button type="button" class="chip">Chỉ hôm nay</button>
+            <button type="button" class="chip">+ Quà tặng</button>
+            <button type="button" class="chip">Mua 1 tặng 1</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="sticker_note">Icon nhỏ đi kèm (1-2 cái)</label>
+          <input id="sticker_note" data-key="sticker" type="text" placeholder="Ví dụ: 🔥❤️">
+          <div class="chips" data-target="sticker_note">
+            <button type="button" class="chip">🔥</button>
+            <button type="button" class="chip">❤️</button>
+            <button type="button" class="chip">🎁</button>
+            <button type="button" class="chip">⭐</button>
+            <button type="button" class="chip">✨</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="brand_consistency">Ghi nhớ để giống nhau mọi video</label>
+          <input id="brand_consistency" data-key="brand_consistency" type="text" placeholder="Ví dụ: luôn dùng font này, badge luôn để góc phải">
+          <p class="hint">Dùng cùng 1 font, cùng vị trí chữ, cùng màu badge cho mọi video — để người xem nhận ra kênh của bạn dù không đọc chữ.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="output-panel">
+      <div class="output-head">
+        <span>prompt.json</span>
+        <div class="sprockets"><i></i><i></i><i></i></div>
+      </div>
+      <p class="output-note">Đây là đoạn mã bạn cần dán vào nơi tạo ảnh AI.</p>
+      <div class="output-body">
+        <div class="film-rail" aria-hidden="true"></div>
+        <pre class="json-out" id="jsonOut"></pre>
+        <div class="film-rail right" aria-hidden="true"></div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="copyBtn" type="button">Sao chép</button>
+        <button id="downloadBtn" type="button">Tải về máy</button>
+        <button id="resetBtn" type="button">Làm lại từ đầu</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="templates-panel">
+    <div class="step-title" style="margin-bottom:16px;"><span class="step-num">＋</span><h2>Mẫu đã lưu</h2></div>
+    <div class="template-save-row">
+      <input id="templateName" type="text" placeholder="Đặt tên cho mẫu (không bắt buộc)">
+      <button class="primary" id="saveTemplateBtn" type="button">Lưu mẫu này</button>
+    </div>
+    <div id="templateList" class="template-list">
+      <p class="hint">Đang tải...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fields = document.querySelectorAll('[data-key]');
+  const out = document.getElementById('jsonOut');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  function escapeHtml(str){
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function highlight(jsonStr){
+    const escaped = escapeHtml(jsonStr);
+    return escaped.replace(/(&quot;.*?&quot;)(:?)/g, function(m, p1, p2){
+      if(p2) return '<span class="jkey">'+p1+'</span><span class="jpunc">:</span>';
+      return '<span class="jstr">'+p1+'</span>';
+    });
+  }
+
+  function layoutNote(ratio){
+    if(!ratio) return null;
+    if(ratio.includes('dọc')) return 'khung dọc dài, phân bổ đều nội dung theo chiều dọc, tránh dồn hết vào giữa khung';
+    if(ratio.includes('vuông')) return 'khung vuông, sắp xếp cân đối 2 chiều, tránh để dư khoảng trống ở góc';
+    if(ratio.includes('ngang')) return 'khung ngang, sắp xếp các thành phần trải đều theo chiều rộng';
+    return null;
+  }
+
+  function buildObject(){
+    const obj = {};
+    fields.forEach(f => {
+      const val = f.value.trim();
+      if(val) obj[f.dataset.key] = val;
+    });
+    const note = layoutNote(obj.aspect_ratio);
+    if(note) obj.luu_y_bo_cuc = note;
+    return obj;
+  }
+
+  function render(){
+    const obj = buildObject();
+    if(Object.keys(obj).length === 0){
+      out.innerHTML = '<span class="empty">// Điền tên sản phẩm ở trên để bắt đầu</span>';
+      return;
+    }
+    const pretty = JSON.stringify(obj, null, 2);
+    out.innerHTML = highlight(pretty);
+  }
+
+  const subjectInput = document.getElementById('subject');
+  const subjectError = document.getElementById('subjectError');
+
+  function validateRequired(){
+    const ok = subjectInput.value.trim().length > 0;
+    subjectInput.classList.toggle('error', !ok);
+    subjectError.classList.toggle('visible', !ok);
+    if(!ok) subjectInput.focus();
+    return ok;
+  }
+
+  subjectInput.addEventListener('input', () => {
+    if(subjectInput.value.trim()){
+      subjectInput.classList.remove('error');
+      subjectError.classList.remove('visible');
+    }
+  });
+
+  fields.forEach(f => f.addEventListener('input', render));
+
+  function syncChipActive(group){
+    const input = document.getElementById(group.dataset.target);
+    const selected = input.value.split(';').map(s => s.trim());
+    group.querySelectorAll('.chip').forEach(chip => {
+      chip.classList.toggle('active', selected.includes(chip.textContent));
+    });
+  }
+
+  document.querySelectorAll('.chips').forEach(group => {
+    const input = document.getElementById(group.dataset.target);
+    group.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const val = chip.textContent;
+        if(group.dataset.mode === 'single'){
+          input.value = (input.value.trim() === val) ? '' : val;
+          render();
+          syncChipActive(group);
+          input.focus();
+          return;
+        }
+        const current = input.value.split(';').map(s => s.trim()).filter(Boolean);
+        const idx = current.indexOf(val);
+        if(idx > -1){
+          current.splice(idx, 1);
+        } else {
+          current.push(val);
+        }
+        input.value = current.join('; ');
+        render();
+        syncChipActive(group);
+        input.focus();
+      });
+    });
+    input.addEventListener('input', () => syncChipActive(group));
+    syncChipActive(group);
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if(!validateRequired()) return;
+    const obj = buildObject();
+    const text = JSON.stringify(obj, null, 2);
+    try{
+      await navigator.clipboard.writeText(text);
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    const original = copyBtn.textContent;
+    copyBtn.textContent = 'Đã sao chép';
+    copyBtn.classList.add('copied');
+    setTimeout(() => {
+      copyBtn.textContent = original;
+      copyBtn.classList.remove('copied');
+    }, 1600);
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    if(!validateRequired()) return;
+    const obj = buildObject();
+    const text = JSON.stringify(obj, null, 2);
+    const blob = new Blob([text], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'prompt.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  resetBtn.addEventListener('click', () => {
+    fields.forEach(f => { if(f.id !== 'aspect_ratio') f.value = ''; });
+    document.getElementById('aspect_ratio').value = 'hình dọc (cho TikTok)';
+    document.querySelectorAll('.chips').forEach(syncChipActive);
+    subjectInput.classList.remove('error');
+    subjectError.classList.remove('visible');
+    render();
+  });
+
+  const templateNameInput = document.getElementById('templateName');
+  const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+  const templateList = document.getElementById('templateList');
+
+  function collectFieldValues(){
+    const data = {};
+    fields.forEach(f => { data[f.id] = f.value; });
+    return data;
+  }
+
+  function applyFieldValues(data){
+    fields.forEach(f => { if(data[f.id] !== undefined) f.value = data[f.id]; });
+    document.querySelectorAll('.chips').forEach(syncChipActive);
+    subjectInput.classList.remove('error');
+    subjectError.classList.remove('visible');
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function loadTemplates(){
+    try{
+      const res = await window.storage.list('templates:', false);
+      const keys = (res && res.keys) ? res.keys : [];
+      if(keys.length === 0){
+        templateList.innerHTML = '<p class="hint">Chưa có mẫu nào được lưu.</p>';
+        return;
+      }
+      const items = [];
+      for(const key of keys){
+        try{
+          const r = await window.storage.get(key, false);
+          if(r && r.value){ items.push({ key, ...JSON.parse(r.value) }); }
+        }catch(e){ /* bỏ qua mẫu lỗi */ }
+      }
+      items.sort((a,b) => (b.savedAt||0) - (a.savedAt||0));
+      if(items.length === 0){
+        templateList.innerHTML = '<p class="hint">Chưa có mẫu nào được lưu.</p>';
+        return;
+      }
+      templateList.innerHTML = '';
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'template-item';
+        const label = document.createElement('span');
+        label.textContent = item.name || '(không có tên)';
+        const actions = document.createElement('div');
+        actions.className = 'template-actions';
+        const useBtn = document.createElement('button');
+        useBtn.type = 'button';
+        useBtn.textContent = 'Dùng mẫu này';
+        useBtn.addEventListener('click', () => applyFieldValues(item.data || {}));
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.textContent = 'Xoá';
+        delBtn.addEventListener('click', async () => {
+          delBtn.disabled = true;
+          try{ await window.storage.delete(item.key, false); }catch(e){}
+          loadTemplates();
+        });
+        actions.appendChild(useBtn);
+        actions.appendChild(delBtn);
+        row.appendChild(label);
+        row.appendChild(actions);
+        templateList.appendChild(row);
+      });
+    }catch(e){
+      templateList.innerHTML = '<p class="hint">Trình duyệt này chưa hỗ trợ lưu mẫu.</p>';
+    }
+  }
+
+  saveTemplateBtn.addEventListener('click', async () => {
+    const data = collectFieldValues();
+    const name = templateNameInput.value.trim() || data.subject || 'Mẫu không tên';
+    const key = 'templates:' + Date.now();
+    const payload = JSON.stringify({ name, savedAt: Date.now(), data });
+    saveTemplateBtn.disabled = true;
+    try{
+      const result = await window.storage.set(key, payload, false);
+      if(!result){
+        alert('Không lưu được mẫu. Vui lòng thử lại.');
+      } else {
+        templateNameInput.value = '';
+        await loadTemplates();
+      }
+    }catch(e){
+      alert('Trình duyệt này chưa hỗ trợ lưu mẫu.');
+    }
+    saveTemplateBtn.disabled = false;
+  });
+
+  loadTemplates();
+  render();
+</script>
+</body>
+</html>
