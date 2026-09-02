@@ -63,6 +63,29 @@
     max-width:56ch;
   }
 
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:28px;
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .tab-btn{
+    font-family:var(--sans);
+    font-size:14px;
+    font-weight:500;
+    padding:11px 4px;
+    margin-right:20px;
+    border:none;
+    border-bottom:2px solid transparent;
+    background:transparent;
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .tab-btn.active{ color:var(--text); border-bottom-color:var(--accent); }
+  .tab-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .tab-panel[hidden]{ display:none; }
+
   .grid{
     display:grid;
     grid-template-columns:1fr;
@@ -352,6 +375,12 @@
     <p>Trả lời các câu hỏi bên dưới. Trang sẽ tự ghép lại thành một đoạn mã, bạn chỉ cần dán đoạn mã đó vào nơi tạo ảnh bằng máy tính (AI).</p>
   </header>
 
+  <div class="tabs">
+    <button type="button" class="tab-btn active" data-tab="image">Tạo ảnh bìa</button>
+    <button type="button" class="tab-btn" data-tab="script">Tạo kịch bản video</button>
+  </div>
+
+  <div class="tab-panel" id="tab-image" data-tab-panel="image">
   <div class="grid">
     <div class="panel">
       <div class="step">
@@ -559,6 +588,61 @@
       <p class="hint">Đang tải...</p>
     </div>
   </div>
+  </div>
+
+  <div class="tab-panel" id="tab-script" data-tab-panel="script" hidden>
+  <div class="grid">
+    <div class="panel">
+      <div class="step">
+        <div class="step-title"><span class="step-num">1</span><h2>Sản phẩm</h2></div>
+        <div class="field">
+          <label for="s_subject">Tên sản phẩm <span class="req">bắt buộc</span></label>
+          <input id="s_subject" type="text" placeholder="Ví dụ: Serum vitamin C dưỡng trắng da 30ml">
+          <p class="field-error" id="sSubjectError">Bạn cần điền tên sản phẩm trước khi sao chép hoặc tải về.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">2</span><h2>Thuộc tính / công dụng</h2></div>
+        <div class="field">
+          <label for="s_attributes">Đặc điểm chung của sản phẩm <span class="req">bắt buộc</span></label>
+          <textarea id="s_attributes" placeholder="Ví dụ: dưỡng trắng da, chứa vitamin C 20%, dùng buổi tối, phù hợp da nhạy cảm, không nhờn rít, chai thuỷ tinh 30ml"></textarea>
+          <p class="field-error" id="sAttributesError">Bạn cần điền công dụng / đặc điểm sản phẩm trước khi sao chép hoặc tải về.</p>
+          <p class="hint">Viết càng chi tiết (công dụng, thành phần, điểm khác biệt), AI càng viết lời thoại sát với sản phẩm thật.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="output-panel">
+      <div class="output-head">
+        <span>prompt-kich-ban.txt</span>
+        <div class="sprockets"><i></i><i></i><i></i></div>
+      </div>
+      <p class="output-note">Đây là đoạn prompt đầy đủ — dán thẳng vào ChatGPT, Gemini... để lấy lời thoại video.</p>
+      <div class="output-body">
+        <div class="film-rail" aria-hidden="true"></div>
+        <pre class="json-out" id="sJsonOut"></pre>
+        <div class="film-rail right" aria-hidden="true"></div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="sCopyBtn" type="button">Sao chép</button>
+        <button id="sDownloadBtn" type="button">Tải về máy</button>
+        <button id="sResetBtn" type="button">Làm lại từ đầu</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="templates-panel">
+    <div class="step-title" style="margin-bottom:16px;"><span class="step-num">＋</span><h2>Mẫu đã lưu</h2></div>
+    <div class="template-save-row">
+      <input id="sTemplateName" type="text" placeholder="Đặt tên cho mẫu (không bắt buộc)">
+      <button class="primary" id="sSaveTemplateBtn" type="button">Lưu mẫu này</button>
+    </div>
+    <div id="sTemplateList" class="template-list">
+      <p class="hint">Đang tải...</p>
+    </div>
+  </div>
+  </div>
 </div>
 
 <script>
@@ -637,6 +721,11 @@
     });
   }
 
+  function renderFieldGroup(input){
+    if(input.hasAttribute('data-key')) render();
+    else if(input.hasAttribute('data-skey')) render2();
+  }
+
   document.querySelectorAll('.chips').forEach(group => {
     const input = document.getElementById(group.dataset.target);
     group.querySelectorAll('.chip').forEach(chip => {
@@ -644,7 +733,7 @@
         const val = chip.textContent;
         if(group.dataset.mode === 'single'){
           input.value = (input.value.trim() === val) ? '' : val;
-          render();
+          renderFieldGroup(input);
           syncChipActive(group);
           input.focus();
           return;
@@ -657,7 +746,7 @@
           current.push(val);
         }
         input.value = current.join('; ');
-        render();
+        renderFieldGroup(input);
         syncChipActive(group);
         input.focus();
       });
@@ -805,6 +894,228 @@
 
   loadTemplates();
   render();
+
+  // ===== Tab 2: Kịch bản video =====
+  const MASTER_PROMPT = `Bạn là chuyên gia viết lời thoại (voice-over) cho video bán hàng affiliate TikTok Shop tại Việt Nam.
+SẢN PHẨM:
+- Tên sản phẩm: {ten_san_pham}
+- Thuộc tính / công dụng / đặc điểm chung: {thuoc_tinh_chung}
+- Thời lượng video: 30-45 giây
+CÁCH XƯNG HÔ:
+- Tự chọn cách gọi khán giả phù hợp với sản phẩm/đối tượng mục tiêu, luân phiên tự nhiên trong bài (không lặp 1 từ suốt video):
+  + "chị em" — phù hợp mỹ phẩm, làm đẹp, nội trợ, mẹ & bé
+  + "cả nhà" — phù hợp sản phẩm gia đình, đồ dùng chung, không phân biệt giới tính/độ tuổi
+  + "mọi người" — trung tính, dùng khi sản phẩm hướng tới đối tượng đa dạng hoặc khi mở đầu/kết thúc video
+- Có thể dùng linh hoạt nhiều cách trong cùng 1 bài (ví dụ mở đầu gọi "mọi người", đoạn giữa chuyển "chị em" khi nói riêng về công dụng) miễn nghe tự nhiên như đang trò chuyện, không gượng ép.
+YÊU CẦU LỜI THOẠI:
+- Tự xác định nỗi đau/nhu cầu phù hợp với thuộc tính sản phẩm trên, rồi triển khai theo cấu trúc: Hook (0-3s) → Vấn đề → Giới thiệu giải pháp → Bằng chứng/demo cụ thể → Ưu đãi + khan hiếm trung thực → CTA, tổng thời lượng nằm trong khoảng 30-45 giây khi đọc với tốc độ nói tự nhiên (~2.5-3 từ/giây).
+- Câu ngắn, tự nhiên như đang nói chuyện, không viết theo văn phong quảng cáo cứng nhắc.
+- Có ít nhất 1 câu thể hiện góc nhìn khách quan/hạn chế nhỏ để tăng độ tin cậy.
+- Có 1 câu/nhãn thể hiện đây là nội dung tiếp thị liên kết (affiliate), lồng tự nhiên trong CTA.
+RÀO CHẮN BẮT BUỘC (không được vi phạm):
+1. Không dùng "nhất/duy nhất/tốt nhất/số 1/hàng đầu/độc quyền" hay từ ngữ tương đương khẳng định vị thế tuyệt đối, trừ khi tôi xác nhận có giấy chứng nhận hợp lệ.
+2. Không cam kết hiệu quả 100%, không hứa thời gian cụ thể có kết quả.
+3. Nếu là thực phẩm chức năng/mỹ phẩm: không dùng "trị/chữa khỏi/dứt điểm/thuốc/sạch tận gốc/đánh bay"; chỉ dùng "hỗ trợ/giúp cải thiện/góp phần". Không gắn với điều trị bệnh cụ thể.
+4. Không viết cho sản phẩm thuộc danh mục cấm của TikTok Shop (giảm cân, sinh lý, dược phẩm kê đơn, thực phẩm trẻ sơ sinh, tiền mã hoá, kim loại quý, dịch vụ tài chính, hàng giả/nhái).
+5. Không bịa số liệu, giải thưởng, bằng chứng khoa học không có thật.
+6. Nếu {ten_san_pham} hoặc {thuoc_tinh_chung} có dấu hiệu vi phạm các rào chắn trên, hãy CẢNH BÁO rõ thay vì tự viết né tránh.
+ĐẦU RA:
+Viết 1 bản lời thoại hoàn chỉnh, chia đoạn rõ ràng kèm thời lượng ước tính mỗi đoạn (tổng 30-45 giây). Sau đó liệt kê 2-3 lưu ý pháp lý/chính sách riêng cho sản phẩm này (nếu có).`;
+
+  const sSubjectInput = document.getElementById('s_subject');
+  const sSubjectError = document.getElementById('sSubjectError');
+  const sAttributesInput = document.getElementById('s_attributes');
+  const sAttributesError = document.getElementById('sAttributesError');
+  const out2 = document.getElementById('sJsonOut');
+  const copyBtn2 = document.getElementById('sCopyBtn');
+  const downloadBtn2 = document.getElementById('sDownloadBtn');
+  const resetBtn2 = document.getElementById('sResetBtn');
+
+  function buildPrompt2(){
+    const name = sSubjectInput.value.trim() || '{ten_san_pham}';
+    const attrs = sAttributesInput.value.trim() || '{thuoc_tinh_chung}';
+    return MASTER_PROMPT.split('{ten_san_pham}').join(name).split('{thuoc_tinh_chung}').join(attrs);
+  }
+
+  function render2(){
+    if(!sSubjectInput.value.trim() && !sAttributesInput.value.trim()){
+      out2.innerHTML = '<span class="empty">// Điền tên sản phẩm và công dụng để tạo prompt</span>';
+      return;
+    }
+    out2.textContent = buildPrompt2();
+  }
+
+  function validateRequired2(){
+    const okName = sSubjectInput.value.trim().length > 0;
+    const okAttrs = sAttributesInput.value.trim().length > 0;
+    sSubjectInput.classList.toggle('error', !okName);
+    sSubjectError.classList.toggle('visible', !okName);
+    sAttributesInput.classList.toggle('error', !okAttrs);
+    sAttributesError.classList.toggle('visible', !okAttrs);
+    if(!okName) sSubjectInput.focus();
+    else if(!okAttrs) sAttributesInput.focus();
+    return okName && okAttrs;
+  }
+
+  sSubjectInput.addEventListener('input', () => {
+    if(sSubjectInput.value.trim()){
+      sSubjectInput.classList.remove('error');
+      sSubjectError.classList.remove('visible');
+    }
+    render2();
+  });
+  sAttributesInput.addEventListener('input', () => {
+    if(sAttributesInput.value.trim()){
+      sAttributesInput.classList.remove('error');
+      sAttributesError.classList.remove('visible');
+    }
+    render2();
+  });
+
+  copyBtn2.addEventListener('click', async () => {
+    if(!validateRequired2()) return;
+    const text = buildPrompt2();
+    try{
+      await navigator.clipboard.writeText(text);
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    const original = copyBtn2.textContent;
+    copyBtn2.textContent = 'Đã sao chép';
+    copyBtn2.classList.add('copied');
+    setTimeout(() => {
+      copyBtn2.textContent = original;
+      copyBtn2.classList.remove('copied');
+    }, 1600);
+  });
+
+  downloadBtn2.addEventListener('click', () => {
+    if(!validateRequired2()) return;
+    const text = buildPrompt2();
+    const blob = new Blob([text], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'prompt-kich-ban.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  resetBtn2.addEventListener('click', () => {
+    sSubjectInput.value = '';
+    sAttributesInput.value = '';
+    sSubjectInput.classList.remove('error');
+    sSubjectError.classList.remove('visible');
+    sAttributesInput.classList.remove('error');
+    sAttributesError.classList.remove('visible');
+    render2();
+  });
+
+  const sTemplateName = document.getElementById('sTemplateName');
+  const sSaveTemplateBtn = document.getElementById('sSaveTemplateBtn');
+  const sTemplateList = document.getElementById('sTemplateList');
+
+  function applyFieldValues2(data){
+    sSubjectInput.value = data.s_subject || '';
+    sAttributesInput.value = data.s_attributes || '';
+    sSubjectInput.classList.remove('error');
+    sSubjectError.classList.remove('visible');
+    sAttributesInput.classList.remove('error');
+    sAttributesError.classList.remove('visible');
+    render2();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function loadTemplates2(){
+    try{
+      const res = await window.storage.list('script_templates:', false);
+      const keys = (res && res.keys) ? res.keys : [];
+      if(keys.length === 0){
+        sTemplateList.innerHTML = '<p class="hint">Chưa có mẫu nào được lưu.</p>';
+        return;
+      }
+      const items = [];
+      for(const key of keys){
+        try{
+          const r = await window.storage.get(key, false);
+          if(r && r.value){ items.push({ key, ...JSON.parse(r.value) }); }
+        }catch(e){ /* bỏ qua mẫu lỗi */ }
+      }
+      items.sort((a,b) => (b.savedAt||0) - (a.savedAt||0));
+      if(items.length === 0){
+        sTemplateList.innerHTML = '<p class="hint">Chưa có mẫu nào được lưu.</p>';
+        return;
+      }
+      sTemplateList.innerHTML = '';
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'template-item';
+        const label = document.createElement('span');
+        label.textContent = item.name || '(không có tên)';
+        const actions = document.createElement('div');
+        actions.className = 'template-actions';
+        const useBtn = document.createElement('button');
+        useBtn.type = 'button';
+        useBtn.textContent = 'Dùng mẫu này';
+        useBtn.addEventListener('click', () => applyFieldValues2(item.data || {}));
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.textContent = 'Xoá';
+        delBtn.addEventListener('click', async () => {
+          delBtn.disabled = true;
+          try{ await window.storage.delete(item.key, false); }catch(e){}
+          loadTemplates2();
+        });
+        actions.appendChild(useBtn);
+        actions.appendChild(delBtn);
+        row.appendChild(label);
+        row.appendChild(actions);
+        sTemplateList.appendChild(row);
+      });
+    }catch(e){
+      sTemplateList.innerHTML = '<p class="hint">Trình duyệt này chưa hỗ trợ lưu mẫu.</p>';
+    }
+  }
+
+  sSaveTemplateBtn.addEventListener('click', async () => {
+    const data = { s_subject: sSubjectInput.value, s_attributes: sAttributesInput.value };
+    const name = sTemplateName.value.trim() || sSubjectInput.value.trim() || 'Mẫu không tên';
+    const key = 'script_templates:' + Date.now();
+    const payload = JSON.stringify({ name, savedAt: Date.now(), data });
+    sSaveTemplateBtn.disabled = true;
+    try{
+      const result = await window.storage.set(key, payload, false);
+      if(!result){
+        alert('Không lưu được mẫu. Vui lòng thử lại.');
+      } else {
+        sTemplateName.value = '';
+        await loadTemplates2();
+      }
+    }catch(e){
+      alert('Trình duyệt này chưa hỗ trợ lưu mẫu.');
+    }
+    sSaveTemplateBtn.disabled = false;
+  });
+
+  loadTemplates2();
+  render2();
+
+  // ===== Chuyển tab =====
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.hidden = panel.dataset.tabPanel !== btn.dataset.tab;
+      });
+    });
+  });
 </script>
 </body>
 </html>
