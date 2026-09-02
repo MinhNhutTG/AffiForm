@@ -181,6 +181,16 @@
     color:var(--text-dim);
     cursor:pointer;
     transition:border-color .15s ease, color .15s ease;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+  }
+  .chip-swatch{
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    flex:none;
+    border:1px solid rgba(255,255,255,0.25);
   }
   .chip:hover{ border-color:var(--accent-2); color:var(--text); }
   .chip:focus-visible{ outline:2px solid var(--accent-2); outline-offset:1px; }
@@ -452,10 +462,13 @@
           <label for="palette">Màu chính trong ảnh?</label>
           <input id="palette" data-key="color_palette" type="text" placeholder="Ví dụ: màu pastel, nhẹ nhàng">
           <div class="chips" data-target="palette">
-            <button type="button" class="chip">màu pastel, nhẹ nhàng</button>
-            <button type="button" class="chip">chỉ màu đen và trắng</button>
-            <button type="button" class="chip">màu hồng và trắng</button>
-            <button type="button" class="chip">màu nâu đất, ấm áp</button>
+            <button type="button" class="chip"><span class="chip-swatch" style="background:linear-gradient(135deg,#ffd6e8,#d6f0ff,#fff6d6);"></span>màu pastel, nhẹ nhàng</button>
+            <button type="button" class="chip"><span class="chip-swatch" style="background:linear-gradient(90deg,#111 50%,#fff 50%);"></span>chỉ màu đen và trắng</button>
+            <button type="button" class="chip"><span class="chip-swatch" style="background:linear-gradient(90deg,#ff8fab 50%,#fff 50%);"></span>màu hồng và trắng</button>
+            <button type="button" class="chip"><span class="chip-swatch" style="background:linear-gradient(135deg,#8b5e34,#c9a27a);"></span>màu nâu đất, ấm áp</button>
+            <button type="button" class="chip"><span class="chip-swatch" style="background:linear-gradient(90deg,#fe2c55 50%,#25f4ee 50%);"></span>màu đỏ và xanh (kiểu TikTok)</button>
+            <button type="button" class="chip"><span class="chip-swatch" style="background:#4caf6d;"></span>màu xanh lá tươi mát</button>
+            <button type="button" class="chip"><span class="chip-swatch" style="background:linear-gradient(135deg,#ffb347,#ffd54f);"></span>màu vàng nắng rực rỡ</button>
           </div>
         </div>
         <div class="field">
@@ -466,7 +479,19 @@
 
       <div class="step">
         <div class="step-title"><span class="step-num">5</span><h2>Chữ, ưu đãi &amp; sticker (thêm sau khi có ảnh)</h2></div>
-        <p class="hint" style="margin:-8px 0 18px;">Máy tính thường viết chữ trong ảnh bị sai, nên 4 ô này chỉ để bạn ghi nhớ, rồi tự thêm bằng CapCut/Canva sau khi có ảnh nền.</p>
+        <p class="hint" style="margin:-8px 0 18px;">Máy tính thường viết chữ trong ảnh bị sai, nên các ô này chỉ để bạn ghi nhớ, rồi tự thêm bằng CapCut/Canva sau khi có ảnh nền.</p>
+        <div class="field">
+          <label for="cover_headline">Dòng chữ to, thu hút nhất trên ảnh bìa</label>
+          <input id="cover_headline" data-key="cover_headline" type="text" placeholder="Ví dụ: MUA 2 TẶNG 1">
+          <p class="hint">Đây là dòng quan trọng nhất — chữ to, màu sặc sỡ, có viền, đập vào mắt ngay khi người xem lướt qua. Thường là giá hoặc ưu đãi.</p>
+          <div class="chips" data-target="cover_headline">
+            <button type="button" class="chip">MUA 2 TẶNG 1</button>
+            <button type="button" class="chip">GIÁ CHỈ 219K</button>
+            <button type="button" class="chip">1 BỊCH CHỈ 149K</button>
+            <button type="button" class="chip">SIÊU RẺ HÔM NAY</button>
+            <button type="button" class="chip">CHỈ CÒN HÔM NAY</button>
+          </div>
+        </div>
         <div class="field">
           <label for="text_hook">Tên sản phẩm hiện trên ảnh</label>
           <input id="text_hook" data-key="text_hook" type="text" placeholder="Ví dụ: chữ viết tay, màu trắng, đặt góc trên, có viền cho nổi">
